@@ -57,8 +57,30 @@ Only its marker, plus whatever glibc v3 startup code got linked in, demands AVX2
   64-bit Intel/AMD CPU since about 2009, including Atom/Celeron Goldmont (N3450, J4105, N4020…).
 - arm64 uses the toolchain defaults (armv8-a).
 
+## Verification (2026-10-29, image built from v1.5.5)
+
+- `readelf -n pearld`: no `.note.gnu.property` ISA note. Go build info: `GOAMD64=v2`.
+- Under QEMU user-mode `-cpu Nehalem` (SSE4.2, no AVX/AVX2):
+  - release binary: `CPU ISA level is lower than required` (same as on an N3450)
+  - our binary: synced from mainnet and fully verified 5,382 blocks, ZK proofs included,
+    with no illegal-instruction crash.
+- Native run: connects to mainnet peers via the DNS seeds and syncs normally.
+
 ## Performance
 
-The hot code (ZK proof verification in Rust/plonky2, Go block validation) is baseline in the release
-and x86-64-v2 in ours, so ours should be the same speed or slightly faster, not slower.
-See the benchmark section below for measurements.
+The hot code (ZK proof verification in Rust/plonky2, Go block validation) is baseline x86-64 in the
+release and x86-64-v2 in ours, so the CPU level does not slow us down.
+
+Measured: fresh sync from mainnet peers, genesis to height 10,000, `--cpus=2`, same host (Intel
+i5-1235U), runs alternated:
+
+| Run | Release v1.5.5 (glibc, Ubuntu 24.04 container) | Ours (alpine/musl, x86-64-v2) |
+|---|---|---|
+| 1 | 303 s | 311 s |
+| 2 | 277 s | 289 s |
+
+Ours is about **3–4 % slower**. Because the CPU level can only help, the likely cause is musl vs glibc
+(libc routines, malloc in the C parts, cgo thread handling). For a full ~1 h 35 min sync that is about
+4 extra minutes, which is acceptable. A Debian/glibc-based runtime image is an option if it ever matters.
+Note: ours always ran second in each pair. Peer/network variance between runs (~25 s) is bigger
+than the gap, so treat the gap as approximate.
