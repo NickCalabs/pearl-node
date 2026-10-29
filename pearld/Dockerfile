@@ -84,7 +84,8 @@ RUN mkdir -p /data/.pearld && chown -R pearl:pearl /data && chmod 700 /data/.pea
 LABEL org.opencontainers.image.title="pearld" \
       org.opencontainers.image.description="Pearl (PRL) full node, built for x86-64-v2 / arm64" \
       org.opencontainers.image.version="${PEARL_VERSION}" \
-      org.opencontainers.image.licenses="ISC"
+      org.opencontainers.image.licenses="ISC" \
+      org.opencontainers.image.source="https://github.com/NickCalabs/pearl-node"
 
 USER pearl
 WORKDIR /data

@@ -1,0 +1,76 @@
+name: Watch upstream Pearl releases
+
+# Every 6 hours: if pearl-research-labs/pearl has a newer published release than
+# pearld/Dockerfile, open a PR that bumps PEARL_VERSION + PEARL_COMMIT, then start
+# the image build on that branch (PRs opened with GITHUB_TOKEN don't trigger
+# workflows by themselves). A human reviews and merges; merging publishes the image.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      UPSTREAM: pearl-research-labs/pearl
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Compare versions
+        id: cmp
+        run: |
+          current=$(sed -n 's/^ARG PEARL_VERSION=//p' pearld/Dockerfile)
+          latest=$(gh api "repos/$UPSTREAM/releases/latest" --jq .tag_name)
+          echo "current=$current latest=$latest"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          # Only move forward (sort -V), never "bump" to an older tag.
+          newest=$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -1)
+          if [ "$latest" != "$current" ] && [ "$newest" = "$latest" ]; then
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open bump PR
+        if: steps.cmp.outputs.bump == 'true'
+        env:
+          CURRENT: ${{ steps.cmp.outputs.current }}
+          LATEST: ${{ steps.cmp.outputs.latest }}
+        run: |
+          branch="bump/pearl-${LATEST}"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            echo "Branch $branch already exists; nothing to do."
+            exit 0
+          fi
+          # Resolve the tag to a commit (handles annotated tags).
+          commit=$(gh api "repos/$UPSTREAM/commits/${LATEST}" --jq .sha)
+          sed -i -e "s/^ARG PEARL_VERSION=.*/ARG PEARL_VERSION=${LATEST}/" \
+                 -e "s/^ARG PEARL_COMMIT=.*/ARG PEARL_COMMIT=${commit}/" pearld/Dockerfile
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -am "pearld: bump upstream Pearl to ${LATEST}"
+          git push origin "$branch"
+          gh workflow run pearld-image.yml --ref "$branch"
+
+          # Needs repo setting: Actions > General > "Allow GitHub Actions to create and approve pull requests".
+          gh pr create --base main --head "$branch" \
+            --title "pearld: bump upstream Pearl to ${LATEST}" \
+            --body "Upstream release: https://github.com/${UPSTREAM}/releases/tag/${LATEST}
+
+          - \`PEARL_VERSION\`: ${CURRENT} → ${LATEST}
+          - \`PEARL_COMMIT\`: \`${commit}\`
+
+          Check before merging: the **pearld image** build on this branch (amd64 + arm64) passed,
+          and the upstream release notes need no config changes. Merging publishes the image." \
+          || { echo "::warning::Could not open the PR (repo setting off?). Open it by hand: https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}"; }
