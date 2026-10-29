@@ -25,6 +25,8 @@ var allowedMethods = map[string]bool{
 	"getnettotals":      true,
 	"getmempoolinfo":    true,
 	"getblockheader":    true,
+	"getblockhash":      true,
+	"getblock":          true,
 	"uptime":            true,
 }
 

@@ -1,55 +1,41 @@
 @import "tailwindcss";
 
-/* Color tokens. Dark mode has its own tuned steps (not an automatic flip).
-   Status colors are reserved for state and always paired with an icon + label. */
+/* Dark-only, like Umbrel's own apps. The pearl's iridescence carries the brand;
+   series colors are validated (dataviz validate_palette.js, dark, surface #0e0e10). */
 :root {
-  --bg: #f4f4f2;
-  --surface: #fcfcfb;
-  --surface-2: #f0efec;
-  --border: #e2e1dc;
-  --text: #0b0b0b;
-  --text-2: #52514e;
-  --text-3: #75746f;
-  --accent: #2a78d6;
-  --accent-track: #d6e5f8;
-  --good: #0ca30c;
-  --good-track: #d3efd3;
-  --critical: #d03b3b;
-  --warning: #b97a00;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111110;
-    --surface: #1a1a19;
-    --surface-2: #232321;
-    --border: #2e2e2b;
-    --text: #f0efec;
-    --text-2: #c3c2b7;
-    --text-3: #918f86;
-    --accent: #3987e5;
-    --accent-track: #1d3350;
-    --good: #2fb82f;
-    --good-track: #17361a;
-    --critical: #e05a5a;
-    --warning: #fab219;
-  }
+  color-scheme: dark;
+  --bg: #050506;
+  --panel: #0e0e10;
+  --panel-2: #151518;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --text: #f2f1f5;
+  --text-2: #b7b5c0;
+  --text-3: #85838f;
+  --out: #8f74ec; /* outgoing peers */
+  --in: #1fa596; /* incoming peers */
+  --good: #3ccf8e;
+  --critical: #e05a5a;
+  --nacre-1: #f7c6e6;
+  --nacre-2: #c3b2ff;
+  --nacre-3: #9fe8dc;
+  --nacre-4: #f6e3b4;
 }
 
 @theme {
   --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-line: var(--border);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
   --color-ink: var(--text);
   --color-ink-2: var(--text-2);
   --color-ink-3: var(--text-3);
-  --color-accent: var(--accent);
-  --color-accent-track: var(--accent-track);
+  --color-out: var(--out);
+  --color-in: var(--in);
   --color-good: var(--good);
-  --color-good-track: var(--good-track);
   --color-critical: var(--critical);
-  --color-warning: var(--warning);
+  --color-nacre: var(--nacre-2);
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -65,14 +51,52 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Indeterminate progress (header download has no reliable percentage). */
-@keyframes slide {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(250%); }
+/* Text with the pearl's sheen. */
+.nacre-text {
+  background: linear-gradient(100deg, var(--nacre-1), var(--nacre-2) 40%, var(--nacre-3) 75%, var(--nacre-4));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-.indeterminate {
-  animation: slide 1.6s ease-in-out infinite;
+
+/* The pearl: a lit sphere plus a slowly turning iridescent film. */
+.pearl {
+  background:
+    radial-gradient(circle at 34% 28%, #ffffff 0%, #fbf8ff 14%, #e9e3f2 38%, #bdb5cf 66%, #7d778f 88%, #4b4757 100%);
+  box-shadow:
+    inset -18px -24px 48px rgba(40, 30, 70, 0.45),
+    inset 10px 12px 30px rgba(255, 255, 255, 0.55),
+    0 30px 80px rgba(160, 140, 255, 0.18);
 }
+.pearl-film {
+  background: conic-gradient(
+    from 0deg,
+    rgba(247, 198, 230, 0.55),
+    rgba(195, 178, 255, 0.5),
+    rgba(159, 232, 220, 0.5),
+    rgba(246, 227, 180, 0.45),
+    rgba(247, 198, 230, 0.55)
+  );
+  mix-blend-mode: soft-light;
+  filter: blur(14px);
+  animation: spin 22s linear infinite;
+}
+.pearl-glow {
+  background: radial-gradient(circle, rgba(195, 178, 255, 0.22) 0%, rgba(159, 232, 220, 0.08) 40%, transparent 70%);
+}
+.orbit {
+  animation: spin 140s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Indeterminate ring segment while headers download. */
+.ring-indeterminate {
+  transform-origin: center;
+  animation: spin 2.4s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .indeterminate { animation: none; transform: none; width: 100% !important; opacity: 0.5; }
+  .pearl-film, .orbit, .ring-indeterminate { animation: none; }
 }

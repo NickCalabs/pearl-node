@@ -14,6 +14,15 @@ export interface Peer {
   syncPeer: boolean;
 }
 
+export interface Block {
+  height: number;
+  hash: string;
+  time: number;
+  txCount: number;
+  sizeBytes: number;
+  strippedSize: number;
+}
+
 export interface Status {
   updatedAt: string;
   reachable: boolean;
@@ -40,6 +49,7 @@ export interface Status {
   };
   peers: { total: number; inbound: number; outbound: number; list: Peer[] };
   traffic: { recvBytes: number; sentBytes: number };
+  blocks: Block[] | null;
   connect: {
     host?: string;
     p2pPort: number;

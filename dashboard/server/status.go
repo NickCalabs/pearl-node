@@ -24,6 +24,7 @@ type Status struct {
 	Peers   PeersInfo   `json:"peers"`
 	Traffic TrafficInfo `json:"traffic"`
 	Connect ConnectInfo `json:"connect"`
+	Blocks  []Block     `json:"blocks"` // newest first
 }
 
 type NodeInfo struct {
@@ -75,6 +76,17 @@ type Peer struct {
 	SyncPeer  bool    `json:"syncPeer"`
 }
 
+// Block is one recent block. Pearl blocks carry a ZK proof, which is most of
+// their size, so the stripped size (without proof/witness) is reported too.
+type Block struct {
+	Height       int64  `json:"height"`
+	Hash         string `json:"hash"`
+	Time         int64  `json:"time"`
+	TxCount      int    `json:"txCount"`
+	SizeBytes    int64  `json:"sizeBytes"`
+	StrippedSize int64  `json:"strippedSize"`
+}
+
 type TrafficInfo struct {
 	RecvBytes int64 `json:"recvBytes"`
 	SentBytes int64 `json:"sentBytes"`
@@ -104,6 +116,8 @@ type poller struct {
 	mu      sync.RWMutex
 	status  Status
 	samples []heightSample
+
+	blockCache map[string]Block // by hash; a block never changes
 
 	sizeMu sync.Mutex
 	size   int64
@@ -251,6 +265,7 @@ func (p *poller) refresh(ctx context.Context) {
 	sort.Slice(st.Peers.List, func(i, j int) bool { return st.Peers.List[i].ConnSince < st.Peers.List[j].ConnSince })
 
 	st.Sync = p.syncInfo(now, ci, netHeight, hdr.Time, st.Peers.Total)
+	st.Blocks = p.recentBlocks(ctx, ci.Blocks, 6)
 
 	p.mu.Lock()
 	p.status = st
@@ -302,6 +317,50 @@ func (p *poller) syncInfo(now time.Time, ci chainInfoRes, netHeight, tipUnix int
 		s.EtaSec = &eta
 	}
 	return s
+}
+
+// recentBlocks returns up to n blocks ending at tip, newest first. Heights are
+// looked up every time (reorgs); block details come from the cache.
+func (p *poller) recentBlocks(ctx context.Context, tip int64, n int) []Block {
+	out := make([]Block, 0, n)
+	seen := make(map[string]bool, n)
+	for h := tip; h > 0 && len(out) < n; h-- {
+		var hash string
+		if err := p.rpc.call(ctx, "getblockhash", &hash, h); err != nil {
+			log.Printf("getblockhash %d: %v", h, err)
+			break
+		}
+		seen[hash] = true
+		if b, ok := p.blockCache[hash]; ok {
+			out = append(out, b)
+			continue
+		}
+		var res struct {
+			Height       int64    `json:"height"`
+			Hash         string   `json:"hash"`
+			Time         int64    `json:"time"`
+			Size         int64    `json:"size"`
+			StrippedSize int64    `json:"strippedsize"`
+			Tx           []string `json:"tx"`
+		}
+		if err := p.rpc.call(ctx, "getblock", &res, hash, 1); err != nil {
+			log.Printf("getblock %s: %v", hash, err)
+			break
+		}
+		b := Block{res.Height, res.Hash, res.Time, len(res.Tx), res.Size, res.StrippedSize}
+		out = append(out, b)
+		if p.blockCache == nil {
+			p.blockCache = map[string]Block{}
+		}
+		p.blockCache[hash] = b
+	}
+	// Keep the cache small: only what's on screen now.
+	for k := range p.blockCache {
+		if !seen[k] {
+			delete(p.blockCache, k)
+		}
+	}
+	return out
 }
 
 // chainSize measures the block database on disk, at most once a minute.
