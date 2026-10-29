@@ -24,7 +24,7 @@ description: >-
   Runs Pearl's official pearld image. Works on CPUs without AVX2 (for example Celeron N3450) and on 64-bit ARM.
 releaseNotes: >-
   Adds two Umbrel home-screen widgets: sync progress, and peers, block height, blockchain size and hashrate.
-  Right-click your home screen (or use Edit widgets) to add them. pearld is unchanged (v1.5.5).
+  Add them from the widgets menu on your Umbrel home screen. pearld is unchanged (v1.5.5).
 
 developer: Pearl Research Labs
 website: https://github.com/pearl-research-labs/pearl
