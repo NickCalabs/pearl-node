@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Pearl Node app icon. P mark from pearl-research-labs/pearl (ISC). -->
+  <defs>
+    <linearGradient id="b0" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e9e5de"/><stop offset="0.55" stop-color="#080807"/></linearGradient><linearGradient id="b1" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#c4c0ba"/><stop offset="0.52" stop-color="#080807"/></linearGradient><linearGradient id="b2" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#a8a5a0"/><stop offset="0.49" stop-color="#080807"/></linearGradient><linearGradient id="b3" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#908d88"/><stop offset="0.47" stop-color="#080807"/></linearGradient><linearGradient id="b4" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#797672"/><stop offset="0.44" stop-color="#080807"/></linearGradient><linearGradient id="b5" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#63615d"/><stop offset="0.41" stop-color="#080807"/></linearGradient><linearGradient id="b6" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#4e4c49"/><stop offset="0.38" stop-color="#080807"/></linearGradient><linearGradient id="b7" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#393836"/><stop offset="0.36" stop-color="#080807"/></linearGradient><linearGradient id="b8" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#252423"/><stop offset="0.33" stop-color="#080807"/></linearGradient><linearGradient id="b9" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#121110"/><stop offset="0.30" stop-color="#080807"/></linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f6f2ed" stop-opacity=".6"/>
+      <stop offset="1" stop-color="#f6f2ed" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="11" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0 1" result="g"/>
+      <feComposite in="SourceGraphic" in2="g" operator="arithmetic" k1="1.15" k2="0.45" k3="0" k4="0"/>
+    </filter>
+    <clipPath id="tile"><rect width="256" height="256" rx="56"/></clipPath>
+    <clipPath id="orbclip"><circle cx="128" cy="108" r="108"/></clipPath>
+  </defs>
+  <g clip-path="url(#tile)">
+    <rect width="256" height="256" fill="#080807"/>
+    <g filter="url(#grain)"><circle cx="128" cy="108.00" r="108.00" fill="url(#b0)"/><circle cx="128" cy="118.32" r="97.68" fill="url(#b1)"/><circle cx="128" cy="128.64" r="87.36" fill="url(#b2)"/><circle cx="128" cy="138.96" r="77.04" fill="url(#b3)"/><circle cx="128" cy="149.28" r="66.72" fill="url(#b4)"/><circle cx="128" cy="159.60" r="56.40" fill="url(#b5)"/><circle cx="128" cy="169.92" r="46.08" fill="url(#b6)"/><circle cx="128" cy="180.24" r="35.76" fill="url(#b7)"/><circle cx="128" cy="190.56" r="25.44" fill="url(#b8)"/><circle cx="128" cy="200.88" r="15.12" fill="url(#b9)"/></g>
+    
+    <circle cx="128" cy="216" r="24" fill="url(#glow)"/>
+    <circle cx="128" cy="216" r="9" fill="#f6f2ed"/>
+    <g transform="translate(91 54) scale(0.2)" fill="#efedea"><path d="M172.982 29.9973H240.204C304 30 347 59 347 108.5C347 154 307 187 240 187V170C284 168 300 142 300 108C300 70 274 47 234 47H218V263H265V280H131V263H172.982V29.9973Z"/><path d="M135 186.934C69.6493 186.934 29 157.511 29 108.249C29 62.9709 67.7444 29.9969 135 29.9969L135 186.934Z"/></g>
+  </g>
+</svg>

@@ -6,6 +6,8 @@ category: crypto
 name: Pearl Node
 version: "1.5.5"
 tagline: Run your own Pearl (PRL) full node
+# Community store only; the official store hosts icons itself (omit this field there).
+icon: https://raw.githubusercontent.com/NickCalabs/pearl-node/main/assets/icon.svg
 description: >-
   Run a full node for Pearl (PRL), the proof-of-useful-work blockchain. Your node downloads and checks every block
   and its zero-knowledge proof itself, so your wallets and miners can trust it instead of someone else's server.

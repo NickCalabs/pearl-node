@@ -1,21 +1,58 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-[28px] border border-line bg-panel ${className}`}>{children}</section>;
+  return <section className={`rounded-[20px] border border-rule bg-surface ${className}`}>{children}</section>;
 }
 
-export function Stat({ label, value, detail }: { label: string; value: ReactNode; detail?: ReactNode }) {
+export function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-line bg-panel px-4 py-3.5">
-      <div className="text-xs text-ink-3">{label}</div>
-      <div className="mt-1 truncate text-xl font-semibold tracking-tight text-ink">{value}</div>
-      {detail && <div className="mt-0.5 truncate text-xs text-ink-3">{detail}</div>}
+    <div className="mb-3 flex items-baseline justify-between gap-4 px-1">
+      <h2 className="eyebrow">{children}</h2>
+      {aside && <div className="text-xs text-ink-3">{aside}</div>}
     </div>
   );
 }
 
-export function SectionTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-3 px-1 text-sm font-medium text-ink-2">{children}</h2>;
+// One cell of a ruled stats grid (editorial, like Pearl's site).
+export function Stat({ label, value, detail }: { label: string; value: ReactNode; detail?: ReactNode }) {
+  return (
+    <div className="min-w-0 px-5 py-5">
+      <div className="eyebrow">{label}</div>
+      <div className="serif-num mt-2 truncate text-[28px] leading-none text-ink">{value}</div>
+      {detail && <div className="mt-2 truncate text-xs text-ink-3">{detail}</div>}
+    </div>
+  );
+}
+
+// Status: always a dot plus a word, never color alone.
+export function StatusLine({ tone, children }: { tone: "good" | "progress" | "error" | "muted"; children: ReactNode }) {
+  const dot = {
+    good: "bg-teal-bright",
+    progress: "bg-accent breathe",
+    error: "bg-error",
+    muted: "bg-ink-3",
+  }[tone];
+  return (
+    <div className="flex items-center gap-2.5 text-sm text-ink-2">
+      <span aria-hidden className={`h-2 w-2 rounded-full ${dot}`} />
+      {children}
+    </div>
+  );
+}
+
+export function Meter({ value, label }: { value: number; label: string }) {
+  return (
+    <div
+      role="progressbar"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(value * 100)}
+      className="h-[3px] w-full overflow-hidden rounded-full bg-accent-track"
+    >
+      <div className="h-full rounded-full bg-accent transition-[width] duration-1000" style={{ width: `${value * 100}%` }} />
+    </div>
+  );
 }
 
 export function CopyField({ label, value, secret = false }: { label: string; value: string; secret?: boolean }) {
@@ -32,17 +69,17 @@ export function CopyField({ label, value, secret = false }: { label: string; val
   };
   return (
     <div className="min-w-0">
-      <div className="mb-1 text-xs text-ink-3">{label}</div>
-      <div className="flex items-center gap-2 rounded-xl border border-line bg-panel-2 px-3 py-2.5">
-        <code className="min-w-0 flex-1 truncate font-mono text-sm text-ink select-all">
+      <div className="eyebrow mb-1.5">{label}</div>
+      <div className="flex items-center gap-3 rounded-xl border border-rule bg-elevated px-3.5 py-2.5">
+        <code className="min-w-0 flex-1 truncate font-mono text-[13px] text-ink select-all">
           {shown ? value : "•".repeat(Math.min(value.length, 16))}
         </code>
         {secret && (
-          <button type="button" onClick={() => setShown((s) => !s)} className="shrink-0 text-xs font-medium text-ink-2 hover:text-ink">
+          <button type="button" onClick={() => setShown((s) => !s)} className="shrink-0 text-xs text-ink-3 hover:text-ink">
             {shown ? "Hide" : "Show"}
           </button>
         )}
-        <button type="button" onClick={copy} className="shrink-0 text-xs font-medium text-nacre hover:underline">
+        <button type="button" onClick={copy} className="shrink-0 text-xs font-medium text-accent hover:text-accent-hover">
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
@@ -56,7 +93,7 @@ export function Tabs<T extends string>({ tabs, value, onChange }: {
   onChange: (t: T) => void;
 }) {
   return (
-    <div role="tablist" className="inline-flex rounded-full border border-line bg-panel-2 p-1">
+    <div role="tablist" className="flex gap-6 border-b border-rule">
       {tabs.map((t) => (
         <button
           key={t.id}
@@ -64,8 +101,8 @@ export function Tabs<T extends string>({ tabs, value, onChange }: {
           type="button"
           aria-selected={value === t.id}
           onClick={() => onChange(t.id)}
-          className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors ${
-            value === t.id ? "bg-white/10 text-ink" : "text-ink-3 hover:text-ink"
+          className={`-mb-px border-b pb-2.5 text-sm transition-colors ${
+            value === t.id ? "border-accent text-ink" : "border-transparent text-ink-3 hover:text-ink-2"
           }`}
         >
           {t.label}
@@ -94,13 +131,13 @@ export function Modal({ open, onClose, title, children }: {
       ref={ref}
       onClose={onClose}
       onClick={(e) => { if (e.target === ref.current) onClose(); }}
-      className="m-auto w-[min(640px,calc(100vw-32px))] rounded-[28px] border border-line-2 bg-panel p-0 text-ink backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+      className="m-auto w-[min(620px,calc(100vw-32px))] rounded-[20px] border border-rule-strong bg-surface p-0 text-ink backdrop:bg-black/75 backdrop:backdrop-blur-sm"
     >
-      <div className="p-6">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-full px-2 py-1 text-ink-3 hover:bg-white/5 hover:text-ink" aria-label="Close">
-            ✕
+      <div className="p-6 sm:p-7">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="font-serif text-2xl">{title}</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-ink-3 hover:bg-white/5 hover:text-ink">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
         {children}
@@ -109,12 +146,6 @@ export function Modal({ open, onClose, title, children }: {
   );
 }
 
-export function AppIcon({ className = "h-16 w-16" }: { className?: string }) {
-  return (
-    <div className={`relative overflow-hidden rounded-[22%] bg-gradient-to-br from-[#2a2440] via-[#16141f] to-[#0b0b10] shadow-lg ring-1 ring-white/10 ${className}`} aria-hidden>
-      <div className="pearl absolute left-1/2 top-1/2 h-[62%] w-[62%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full">
-        <div className="pearl-film absolute inset-[-20%] rounded-full" />
-      </div>
-    </div>
-  );
+export function AppIcon({ className = "h-14 w-14" }: { className?: string }) {
+  return <img src="./icon.svg" alt="" className={`rounded-[22%] ring-1 ring-rule ${className}`} />;
 }

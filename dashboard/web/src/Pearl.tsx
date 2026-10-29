@@ -1,139 +1,135 @@
+import { useId } from "react";
 import type { Peer } from "./types";
 
-// The hero visual: a pearl that "forms" as the node syncs. The ring around it
-// is sync progress; small lights orbiting it are the connected peers
-// (lavender = outgoing, teal = incoming). No peer locations are used.
-export function PearlVisual({ progress, indeterminate, synced, peers }: {
-  progress: number;
-  indeterminate: boolean;
-  synced: boolean;
-  peers: Peer[];
-}) {
-  const size = 360;
-  const c = size / 2;
-  const ringR = 128;
-  const circ = 2 * Math.PI * ringR;
-  const p = synced ? 1 : Math.max(0, Math.min(1, progress));
-  const orbitR = 162;
+// "Parametric pearl", after Pearl's brand art: concentric bands tangent at the
+// bottom, lit from below, with film grain. Same construction as assets/icon.svg.
 
+function mix(a: string, b: string, t: number): string {
+  const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+  const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+  return "#" + pa.map((v, k) => Math.round(v + (pb[k] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+
+function Grain({ id, seed }: { id: string; seed: number }) {
+  // Grain scales with brightness (multiply), so dark areas stay dark.
   return (
-    <div className="relative aspect-square w-full max-w-[360px]" aria-hidden>
-      <div className="pearl-glow absolute inset-[-12%] rounded-full" />
-
-      <svg viewBox={`0 0 ${size} ${size}`} className="absolute inset-0 h-full w-full overflow-visible">
-        <defs>
-          <linearGradient id="ring-g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="var(--nacre-1)" />
-            <stop offset=".45" stopColor="var(--nacre-2)" />
-            <stop offset="1" stopColor="var(--nacre-3)" />
-          </linearGradient>
-        </defs>
-
-        {/* nacre growth lines */}
-        {[100, 142, 176].map((r, i) => (
-          <circle key={r} cx={c} cy={c} r={r} fill="none" stroke="white" strokeOpacity={0.05 - i * 0.012} />
-        ))}
-
-        {/* progress ring */}
-        <circle cx={c} cy={c} r={ringR} fill="none" stroke="white" strokeOpacity={0.07} strokeWidth={4} />
-        {indeterminate ? (
-          <g className="ring-indeterminate">
-            <circle
-              cx={c} cy={c} r={ringR} fill="none" stroke="url(#ring-g)" strokeWidth={4} strokeLinecap="round"
-              strokeDasharray={`${circ * 0.18} ${circ}`}
-            />
-          </g>
-        ) : (
-          <circle
-            cx={c} cy={c} r={ringR} fill="none" stroke="url(#ring-g)" strokeWidth={4} strokeLinecap="round"
-            strokeDasharray={`${Math.max(p * circ, p > 0 ? 4 : 0)} ${circ}`}
-            transform={`rotate(-90 ${c} ${c})`}
-            style={{ transition: "stroke-dasharray 0.8s ease" }}
-          />
-        )}
-
-        {/* peers in orbit */}
-        <g className="orbit" style={{ transformOrigin: `${c}px ${c}px` }}>
-          <circle cx={c} cy={c} r={orbitR} fill="none" stroke="white" strokeOpacity={0.06} strokeDasharray="2 6" />
-          {peers.map((peer, i) => {
-            const a = (i / Math.max(peers.length, 1)) * 2 * Math.PI - Math.PI / 2;
-            const x = c + orbitR * Math.cos(a);
-            const y = c + orbitR * Math.sin(a);
-            return (
-              <g key={peer.id}>
-                <circle cx={x} cy={y} r={9} fill={peer.inbound ? "var(--in)" : "var(--out)"} opacity={0.18} />
-                <circle cx={x} cy={y} r={4.5} fill={peer.inbound ? "var(--in)" : "var(--out)"} stroke="var(--panel)" strokeWidth={2} />
-              </g>
-            );
-          })}
-        </g>
-      </svg>
-
-      {/* the pearl itself */}
-      <div className="pearl absolute left-1/2 top-1/2 h-[54%] w-[54%] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full">
-        <div className="pearl-film absolute inset-[-20%] rounded-full" />
-        <div className="absolute left-[22%] top-[16%] h-[18%] w-[30%] -rotate-[28deg] rounded-full bg-white/70 blur-[6px]" />
-      </div>
-    </div>
+    <filter id={id} x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={2} seed={seed} result="n" />
+      <feColorMatrix in="n" type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0 1" result="g" />
+      <feComposite in="SourceGraphic" in2="g" operator="arithmetic" k1={1.15} k2={0.45} k3={0} k4={0} />
+    </filter>
   );
 }
 
-// Connections ring: outgoing vs incoming. Two validated series colors,
-// a 2px gap between segments, and a legend with counts (never color alone).
-export function ConnectionsRing({ outbound, inbound }: { outbound: number; inbound: number }) {
-  const total = outbound + inbound;
-  const r = 52;
-  const circ = 2 * Math.PI * r;
-  const gap = total > 0 && outbound > 0 && inbound > 0 ? 3 : 0;
-  const outLen = total ? (outbound / total) * circ - gap : 0;
-  const inLen = total ? (inbound / total) * circ - gap : 0;
+// Hero: like nacre around a pearl, bands light up from the core outward as the
+// node syncs; the pearl at the base glows once synced. Peers are small dots on a slow orbit: filled =
+// outgoing, hollow = incoming (shape, not color, tells them apart).
+export function ParametricPearl({ progress, synced, waiting, peers, bg = "#100f0e" }: {
+  progress: number;
+  synced: boolean;
+  waiting: boolean;
+  peers: Peer[];
+  bg?: string; // the panel color the orb fades into
+}) {
+  const uid = useId().replace(/:/g, "");
+  const N = 14;
+  const S = 420;
+  const cx = S / 2;
+  const R0 = 168;
+  const bottom = 372;
+  const center = bottom - R0;
+  const lit = synced ? N : Math.floor(Math.max(0, Math.min(1, progress)) * N);
+  const orbitR = R0 + 24;
+
   return (
-    <svg viewBox="0 0 140 140" className="h-44 w-44" role="img" aria-label={`${total} peers: ${outbound} outgoing, ${inbound} incoming`}>
-      <circle cx="70" cy="70" r={r} fill="none" stroke="white" strokeOpacity={0.07} strokeWidth={14} />
-      {outLen > 0 && (
-        <circle cx="70" cy="70" r={r} fill="none" stroke="var(--out)" strokeWidth={14}
-          strokeDasharray={`${outLen} ${circ}`} transform="rotate(-90 70 70)" />
-      )}
-      {inLen > 0 && (
-        <circle cx="70" cy="70" r={r} fill="none" stroke="var(--in)" strokeWidth={14}
-          strokeDasharray={`${inLen} ${circ}`} strokeDashoffset={-(outLen + gap)} transform="rotate(-90 70 70)" />
-      )}
-      <text x="70" y="68" textAnchor="middle" className="fill-ink text-[26px] font-semibold">{total}</text>
-      <text x="70" y="88" textAnchor="middle" className="fill-ink-3 text-[11px]">Peers</text>
+    <svg viewBox={`0 0 ${S} ${S}`} className="h-auto w-full" aria-hidden>
+      <defs>
+        <Grain id={`grain-${uid}`} seed={11} />
+        {Array.from({ length: N }, (_, i) => {
+          const t = i / (N - 1);
+          const on = mix("#ece8e1", "#1a1816", 0.8 * Math.pow(t, 1.2));
+          const off = mix("#1f1d1b", bg, 0.3 + 0.5 * t);
+          const isLit = N - 1 - i < lit; // innermost band (i = N-1) lights first
+          return (
+            <linearGradient key={i} id={`band-${uid}-${i}`} x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0" stopColor={isLit ? on : off} style={{ transition: "stop-color 1.2s ease" }} />
+              <stop offset={0.55 - 0.25 * t} stopColor={bg} />
+            </linearGradient>
+          );
+        })}
+        <radialGradient id={`glow-${uid}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="#f6f2ed" stopOpacity=".6" />
+          <stop offset="1" stopColor="#f6f2ed" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <g filter={`url(#grain-${uid})`}>
+        {Array.from({ length: N }, (_, i) => {
+          const r = R0 * (1 - 0.88 * (i / (N - 1)));
+          return <circle key={i} cx={cx} cy={bottom - r} r={r} fill={`url(#band-${uid}-${i})`} />;
+        })}
+      </g>
+
+      {/* peers in orbit around the pearl */}
+      <g>
+        <circle cx={cx} cy={center} r={orbitR} fill="none" stroke="var(--rule)" strokeDasharray="1 7" strokeLinecap="round" />
+        {peers.map((p, i) => {
+          // spread over the upper 260 degrees, centred on the top
+          const span = (260 * Math.PI) / 180;
+          const a = -Math.PI / 2 + (peers.length > 1 ? (i / (peers.length - 1) - 0.5) * span : 0);
+          const x = cx + orbitR * Math.cos(a);
+          const y = center + orbitR * Math.sin(a);
+          return p.inbound ? (
+            <circle key={p.id} cx={x} cy={y} r={4.5} fill="var(--canvas)" stroke="var(--oyster)" strokeWidth={1.5} />
+          ) : (
+            <circle key={p.id} cx={x} cy={y} r={4.5} fill="var(--oyster)" stroke="var(--canvas)" strokeWidth={2} />
+          );
+        })}
+      </g>
+
+      {/* the pearl */}
+      <circle cx={cx} cy={bottom} r={synced ? 30 : 22} fill={`url(#glow-${uid})`} className={synced ? "" : "breathe"} />
+      <circle
+        cx={cx} cy={bottom} r={9}
+        fill={synced ? "#f6f2ed" : waiting ? "#5a5751" : "#cfcac2"}
+        className={synced ? "" : "breathe"}
+      />
     </svg>
   );
 }
 
-// Deterministic "nacre" art for a block, drawn from its hash.
-export function BlockArt({ hash }: { hash: string }) {
+// Small pearl for a block card, shaped by the block hash.
+export function BlockPearl({ hash }: { hash: string }) {
+  const uid = useId().replace(/:/g, "");
   const bytes = hash.match(/../g)?.map((h) => parseInt(h, 16)) ?? [0];
   const b = (i: number) => bytes[i % bytes.length];
-  const palette = ["var(--nacre-1)", "var(--nacre-2)", "var(--nacre-3)", "var(--nacre-4)"];
-  const cx = 50 + (b(0) - 128) / 16;
-  const cy = 50 + (b(1) - 128) / 16;
-  const rings = Array.from({ length: 9 }, (_, k) => {
-    const base = 8 + k * 5.2;
-    const pts = Array.from({ length: 24 }, (_, j) => {
-      const wobble = ((b(k * 7 + j) / 255) - 0.5) * (1.2 + k * 0.45);
-      const a = (j / 24) * 2 * Math.PI + b(k) / 80;
-      return [cx + (base + wobble) * Math.cos(a), cy + (base + wobble) * Math.sin(a)];
-    });
-    const d = pts.map(([x, y], j) => `${j ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ") + "Z";
-    return { d, color: palette[(b(k + 3) + k) % palette.length], op: 0.15 + (b(k + 11) / 255) * 0.45 };
-  });
+  const N = 5 + (b(0) % 5);
+  const R0 = 34 + (b(1) % 10);
+  const cx = 50 + ((b(2) % 17) - 8);
+  const bottom = 78 + (b(3) % 8);
+  const shrink = 0.7 + (b(4) % 20) / 100;
+  const tilt = ((b(5) % 41) - 20) * 0.6;
   return (
     <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-hidden>
       <defs>
-        <radialGradient id={`bg-${hash.slice(0, 8)}`} cx="50%" cy="50%" r="60%">
-          <stop offset="0" stopColor={palette[b(5) % 4]} stopOpacity=".22" />
-          <stop offset="1" stopColor="#000" stopOpacity="0" />
-        </radialGradient>
+        <Grain id={`g-${uid}`} seed={b(6)} />
+        {Array.from({ length: N }, (_, i) => {
+          const t = i / Math.max(N - 1, 1);
+          return (
+            <linearGradient key={i} id={`b-${uid}-${i}`} x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0" stopColor={mix("#e6e2da", "#151412", Math.pow(t, 0.8))} />
+              <stop offset={0.6 - 0.25 * t} stopColor="#080807" />
+            </linearGradient>
+          );
+        })}
       </defs>
-      <rect width="100" height="100" fill={`url(#bg-${hash.slice(0, 8)})`} />
-      {rings.map((r, i) => (
-        <path key={i} d={r.d} fill="none" stroke={r.color} strokeOpacity={r.op} strokeWidth={0.8} />
-      ))}
-      <circle cx={cx} cy={cy} r={4.5} fill="white" opacity={0.85} />
+      <g filter={`url(#g-${uid})`} transform={`rotate(${tilt} ${cx} ${bottom})`}>
+        {Array.from({ length: N }, (_, i) => {
+          const r = R0 * (1 - shrink * (i / Math.max(N - 1, 1)));
+          return <circle key={i} cx={cx} cy={bottom - r} r={r} fill={`url(#b-${uid}-${i})`} />;
+        })}
+      </g>
+      <circle cx={cx} cy={bottom} r={2.6} fill="#f6f2ed" />
     </svg>
   );
 }

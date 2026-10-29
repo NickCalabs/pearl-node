@@ -1,102 +1,92 @@
 @import "tailwindcss";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/source-serif-4";
+@import "@fontsource-variable/source-code-pro";
 
-/* Dark-only, like Umbrel's own apps. The pearl's iridescence carries the brand;
-   series colors are validated (dataviz validate_palette.js, dark, surface #0e0e10). */
+/* Pearl's dark "pearl canvas" tokens (from pearlresearch.ai). Dark-only, like
+   Umbrel's own apps. Peach is for progress and actions; teal means "in sync".
+   Errors use a red outside the brand palette so they are never mistaken for it,
+   and always come with a label. */
 :root {
   color-scheme: dark;
-  --bg: #050506;
-  --panel: #0e0e10;
-  --panel-2: #151518;
-  --line: rgba(255, 255, 255, 0.08);
-  --line-2: rgba(255, 255, 255, 0.14);
-  --text: #f2f1f5;
-  --text-2: #b7b5c0;
-  --text-3: #85838f;
-  --out: #8f74ec; /* outgoing peers */
-  --in: #1fa596; /* incoming peers */
-  --good: #3ccf8e;
-  --critical: #e05a5a;
-  --nacre-1: #f7c6e6;
-  --nacre-2: #c3b2ff;
-  --nacre-3: #9fe8dc;
-  --nacre-4: #f6e3b4;
+  --canvas: #080807;
+  --surface: #100f0e;
+  --elevated: #171513;
+  --rule: rgba(246, 242, 237, 0.12);
+  --rule-strong: rgba(246, 242, 237, 0.22);
+  --text: #f6f2ed;
+  --text-2: #b3afa8;
+  --text-3: #8c8880;
+  --oyster: #efedea;
+  --accent: #f0c3ae;
+  --accent-hover: #e7b295;
+  --accent-track: rgba(240, 195, 174, 0.16);
+  --teal: #206e76;
+  --teal-bright: #79c2bf;
+  --error: #ec6a5e;
 }
 
 @theme {
-  --color-bg: var(--bg);
-  --color-panel: var(--panel);
-  --color-panel-2: var(--panel-2);
-  --color-line: var(--line);
-  --color-line-2: var(--line-2);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-ink: var(--text);
   --color-ink-2: var(--text-2);
   --color-ink-3: var(--text-3);
-  --color-out: var(--out);
-  --color-in: var(--in);
-  --color-good: var(--good);
-  --color-critical: var(--critical);
-  --color-nacre: var(--nacre-2);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --color-oyster: var(--oyster);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-track: var(--accent-track);
+  --color-teal: var(--teal);
+  --color-teal-bright: var(--teal-bright);
+  --color-error: var(--error);
+  --font-sans: "Space Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Source Serif 4 Variable", Georgia, "Times New Roman", serif;
+  --font-mono: "Source Code Pro Variable", ui-monospace, Menlo, monospace;
 }
 
 html,
 body {
-  background: var(--bg);
+  background: var(--canvas);
   color: var(--text);
 }
 
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01";
 }
 
-/* Text with the pearl's sheen. */
-.nacre-text {
-  background: linear-gradient(100deg, var(--nacre-1), var(--nacre-2) 40%, var(--nacre-3) 75%, var(--nacre-4));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* Small caps label, as on Pearl's site. */
+.eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
 }
 
-/* The pearl: a lit sphere plus a slowly turning iridescent film. */
-.pearl {
-  background:
-    radial-gradient(circle at 34% 28%, #ffffff 0%, #fbf8ff 14%, #e9e3f2 38%, #bdb5cf 66%, #7d778f 88%, #4b4757 100%);
-  box-shadow:
-    inset -18px -24px 48px rgba(40, 30, 70, 0.45),
-    inset 10px 12px 30px rgba(255, 255, 255, 0.55),
-    0 30px 80px rgba(160, 140, 255, 0.18);
+.serif-num {
+  font-family: var(--font-serif);
+  font-variation-settings: "opsz" 60;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
-.pearl-film {
-  background: conic-gradient(
-    from 0deg,
-    rgba(247, 198, 230, 0.55),
-    rgba(195, 178, 255, 0.5),
-    rgba(159, 232, 220, 0.5),
-    rgba(246, 227, 180, 0.45),
-    rgba(247, 198, 230, 0.55)
-  );
-  mix-blend-mode: soft-light;
-  filter: blur(14px);
-  animation: spin 22s linear infinite;
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
-.pearl-glow {
-  background: radial-gradient(circle, rgba(195, 178, 255, 0.22) 0%, rgba(159, 232, 220, 0.08) 40%, transparent 70%);
+.breathe {
+  animation: breathe 2.8s ease-in-out infinite;
 }
-.orbit {
-  animation: spin 140s linear infinite;
-}
-@keyframes spin {
+@keyframes drift {
   to { transform: rotate(360deg); }
 }
-
-/* Indeterminate ring segment while headers download. */
-.ring-indeterminate {
-  transform-origin: center;
-  animation: spin 2.4s linear infinite;
+.drift {
+  animation: drift 180s linear infinite;
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .pearl-film, .orbit, .ring-indeterminate { animation: none; }
+  .breathe, .drift { animation: none; }
 }
