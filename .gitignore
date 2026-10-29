@@ -4,7 +4,7 @@ node_modules/
 dist/
 build/
 *.log
-data/
+/data/
 vendor/
 dashboard/server/web/
 # Private, local only: project brief / agent instructions (CLAUDE.md -> BRIEF.md)
