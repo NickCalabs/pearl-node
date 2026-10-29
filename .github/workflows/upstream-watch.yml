@@ -1,9 +1,10 @@
 name: Watch upstream Pearl releases
 
 # Every 6 hours: if pearl-research-labs/pearl has a newer published release than
-# pearld/Dockerfile, open a PR that bumps PEARL_VERSION + PEARL_COMMIT, then start
-# the image build on that branch (PRs opened with GITHUB_TOKEN don't trigger
-# workflows by themselves). A human reviews and merges; merging publishes the image.
+# the image pinned in pearld/image, and its official image is already on GHCR,
+# open a PR that pins the new image by digest and start the image check on that
+# branch (PRs opened with GITHUB_TOKEN don't trigger workflows by themselves).
+# A human reviews and merges.
 
 on:
   schedule:
@@ -23,13 +24,14 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       UPSTREAM: pearl-research-labs/pearl
+      IMAGE: ghcr.io/pearl-research-labs/pearl/pearld
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Compare versions
         id: cmp
         run: |
-          current=$(sed -n 's/^ARG PEARL_VERSION=//p' pearld/Dockerfile)
+          current=$(sed -E 's/.*:(v[^@]+)@.*/\1/' pearld/image)
           latest=$(gh api "repos/$UPSTREAM/releases/latest" --jq .tag_name)
           echo "current=$current latest=$latest"
           echo "current=$current" >> "$GITHUB_OUTPUT"
@@ -51,26 +53,28 @@ jobs:
             echo "Branch $branch already exists; nothing to do."
             exit 0
           fi
-          # Resolve the tag to a commit (handles annotated tags).
-          commit=$(gh api "repos/$UPSTREAM/commits/${LATEST}" --jq .sha)
-          sed -i -e "s/^ARG PEARL_VERSION=.*/ARG PEARL_VERSION=${LATEST}/" \
-                 -e "s/^ARG PEARL_COMMIT=.*/ARG PEARL_COMMIT=${commit}/" pearld/Dockerfile
+          # Upstream tags the image in a separate job after the release. If it isn't
+          # there yet, try again on the next run.
+          if ! digest=$(docker buildx imagetools inspect "${IMAGE}:${LATEST}" --format '{{json .Manifest}}' | jq -er .digest); then
+            echo "::notice::${IMAGE}:${LATEST} is not published yet; will retry next run."
+            exit 0
+          fi
+          echo "${IMAGE}:${LATEST}@${digest}" > pearld/image
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
-          git commit -am "pearld: bump upstream Pearl to ${LATEST}"
+          git commit -am "pearld: pin official image ${LATEST}"
           git push origin "$branch"
-          gh workflow run pearld-image.yml --ref "$branch"
+          gh workflow run check-image.yml --ref "$branch"
 
-          # Needs repo setting: Actions > General > "Allow GitHub Actions to create and approve pull requests".
           gh pr create --base main --head "$branch" \
-            --title "pearld: bump upstream Pearl to ${LATEST}" \
+            --title "pearld: pin official image ${LATEST}" \
             --body "Upstream release: https://github.com/${UPSTREAM}/releases/tag/${LATEST}
 
-          - \`PEARL_VERSION\`: ${CURRENT} → ${LATEST}
-          - \`PEARL_COMMIT\`: \`${commit}\`
+          - Image: \`${IMAGE}:${LATEST}\`
+          - Digest: \`${digest}\` (was ${CURRENT})
 
-          Check before merging: the **pearld image** build on this branch (amd64 + arm64) passed,
-          and the upstream release notes need no config changes. Merging publishes the image." \
-          || { echo "::warning::Could not open the PR (repo setting off?). Open it by hand: https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}"; }
+          Before merging, check that **Check pearld image** passed on this branch (amd64 + arm64)
+          and that the upstream release notes need no config changes." \
+          || echo "::warning::Could not open the PR. Open it by hand: https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}"

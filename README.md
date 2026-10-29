@@ -1,48 +1,47 @@
 # pearl-node
 
-A [Pearl](https://github.com/pearl-research-labs/pearl) (PRL) full node in a container, with a web
-dashboard, packaged for home servers. Work in progress, not released.
+A [Pearl](https://github.com/pearl-research-labs/pearl) (PRL) full node for home servers, with a web
+dashboard. Work in progress, not released.
 
-Three layers, each usable without the ones above it:
+It builds on what Pearl already ships: the node is the **official `pearld` Docker image**. This project
+adds what's missing around it:
 
 | Layer | Folder | What it is | Status |
 |---|---|---|---|
-| Node image | [`pearld/`](pearld/) | `pearld` + `prlctl` Docker image, amd64 + arm64. Runs anywhere Docker runs. | working (amd64 tested) |
-| Dashboard | `dashboard/` | Web UI: sync progress, peers, chain size, connection info. Read-only RPC. | planned |
+| Node | [`pearld/`](pearld/) | Pin + checks for the official image `ghcr.io/pearl-research-labs/pearl/pearld` | done |
+| Dashboard | `dashboard/` | Web UI: sync progress, peers, chain size, connection info. Read-only RPC. | next |
 | Packaging | `umbrel/` | umbrelOS app (community store first, then the official store). | planned |
 
 ## Node image
 
-`ghcr.io/nickcalabs/pearld` is built from upstream source (pinned tag + commit) on alpine/musl:
+[`pearld/image`](pearld/image) pins the official image by digest. That file is the single source of truth.
 
-- **linux/amd64** at **x86-64-v2**: runs on CPUs without AVX2 (Celeron/Pentium/Atom such as the N3450,
-  where the official release binary fails with `CPU ISA level is lower than required`).
-  See [docs/cpu-compat.md](docs/cpu-compat.md) for why.
-- **linux/arm64** (armv8-a, e.g. Raspberry Pi 4/5), built in CI under emulation.
+The image covers amd64 + arm64 and also runs on CPUs **without AVX2** (Celeron/Pentium/Atom such as the
+N3450), unlike the official release tarball. See [docs/cpu-compat.md](docs/cpu-compat.md).
 
-It runs as uid/gid 1000 and keeps its data in `/data/.pearld`. Ports: 44108 P2P, 44107 RPC (TLS).
+It defaults to root with data in `/root/.pearld`. We run it as uid 1000 instead:
 
 ```sh
-docker run -d --name pearld -v pearld-data:/data/.pearld -p 44108:44108 ghcr.io/nickcalabs/pearld:v1.5.5
+mkdir -p data && sudo chown 1000:1000 data
+docker run -d --name pearld --user 1000:1000 -e HOME=/data -v "$PWD/data:/data" \
+  -p 44108:44108 "$(cat pearld/image)"
 ```
 
-Build and check it yourself:
+Data then lives in `data/.pearld`. Ports: 44108 P2P, 44107 RPC (TLS, self-signed `rpc.cert`).
+
+Check an image (needs Docker, plus `readelf` and `qemu-x86_64` for amd64):
 
 ```sh
-docker buildx build --platform linux/amd64 --load -t pearld:local pearld
-pearld/test/check-image.sh pearld:local amd64   # needs readelf + qemu-x86_64
+pearld/test/check-image.sh amd64        # the pinned image
+pearld/test/check-image.sh <ref> arm64  # any other image
 ```
-
-Build args: `PEARL_VERSION` (tag), `PEARL_COMMIT` (must match the tag), `RUST_VERSION`.
 
 ## CI
 
-- [`pearld-image.yml`](.github/workflows/pearld-image.yml): builds amd64 + arm64, runs
-  `check-image.sh` (no v3 ISA marker, runs on an emulated Nehalem CPU, uid 1000), and on `main` publishes
-  one multi-arch image tagged `vX.Y.Z`, `sha-<commit>` and `latest`. The run summary shows the digest
-  to pin.
-- [`upstream-watch.yml`](.github/workflows/upstream-watch.yml): every 6 h, if upstream has a newer
-  release, it opens a PR bumping `PEARL_VERSION`/`PEARL_COMMIT` and builds it. Merging publishes the image.
+- [`check-image.yml`](.github/workflows/check-image.yml): runs `check-image.sh` on the pinned image for
+  amd64 + arm64 whenever `pearld/` changes.
+- [`upstream-watch.yml`](.github/workflows/upstream-watch.yml): every 6 h, if Pearl published a newer
+  release and its image is on GHCR, it opens a PR pinning the new digest and runs the check on it.
 
 ## License
 

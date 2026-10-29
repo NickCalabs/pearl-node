@@ -1,0 +1,47 @@
+name: Check pearld image
+
+# We use Pearl's official image (ghcr.io/pearl-research-labs/pearl/pearld), pinned
+# by digest in pearld/image. This checks the pinned image on amd64 and arm64:
+# runs as uid 1000, no AVX2 requirement (old Celeron/Atom CPUs), right version.
+
+on:
+  push:
+    branches: [main]
+    paths: [pearld/**, .github/workflows/check-image.yml]
+  pull_request:
+    paths: [pearld/**, .github/workflows/check-image.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU (arm64 emulation)
+        if: matrix.arch == 'arm64'
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+
+      - name: Install check tools
+        if: matrix.arch == 'amd64'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq qemu-user binutils
+
+      - name: Check pinned image
+        run: pearld/test/check-image.sh ${{ matrix.arch }}
