@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: crypto
 name: Pearl Node
-version: "1.5.5"
+version: "1.5.5-patch.1"
 tagline: Run your own Pearl (PRL) full node
 # Community store only; the official store hosts icons itself (omit this field there).
 icon: https://raw.githubusercontent.com/NickCalabs/pearl-node/main/assets/icon.svg
@@ -22,7 +22,8 @@ description: >-
 
 
   Runs Pearl's official pearld image. Works on CPUs without AVX2 (for example Celeron N3450) and on 64-bit ARM.
-releaseNotes: ""
+releaseNotes: >-
+  New dashboard design in Pearl's own style, and an app icon. pearld is unchanged (v1.5.5); your blockchain data is kept.
 
 developer: Pearl Research Labs
 website: https://github.com/pearl-research-labs/pearl
