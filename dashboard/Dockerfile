@@ -16,6 +16,7 @@ WORKDIR /src/server
 COPY server/go.mod ./
 COPY server/*.go ./
 COPY --from=web /src/server/web ./web
+RUN go vet ./... && go test ./...
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags="-s -w" -o /out/pearl-dashboard .
 

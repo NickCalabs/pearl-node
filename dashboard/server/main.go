@@ -100,6 +100,9 @@ func main() {
 		w.Header().Set("Content-Disposition", `attachment; filename="pearld-rpc.cert"`)
 		_, _ = w.Write(b)
 	})
+	// Umbrel home-screen widgets (no secrets; see widgets.go).
+	mux.HandleFunc("GET /api/widget/sync", widgetHandler(p, syncWidgetFor))
+	mux.HandleFunc("GET /api/widget/stats", widgetHandler(p, statsWidgetFor))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("ok\n"))
 	})

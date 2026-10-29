@@ -5,9 +5,9 @@ export const fmtInt = (n: number) => int.format(Math.round(n));
 export const fmtCompact = (n: number) => compact.format(n);
 
 export function fmtPercent(p: number): string {
-  // Never show 100% until actually synced.
+  // Round down, so it never shows 100% before the node is synced.
   const v = Math.min(p * 100, 99.99);
-  return (v < 10 ? v.toFixed(2) : v.toFixed(1)) + "%";
+  return (v < 10 ? (Math.floor(v * 100) / 100).toFixed(2) : (Math.floor(v * 10) / 10).toFixed(1)) + "%";
 }
 
 function scaled(n: number, units: string[], base: number): string {

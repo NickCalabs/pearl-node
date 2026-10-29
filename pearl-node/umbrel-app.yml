@@ -42,6 +42,37 @@ submitter: NickCalabs
 # Replace with the umbrel-apps pull request URL when submitting to the official store.
 submission: https://github.com/NickCalabs/pearl-node
 
+widgets:
+  - id: "sync"
+    type: "text-with-progress"
+    refresh: "5s"
+    endpoint: "dashboard:8080/api/widget/sync"
+    link: ""
+    example:
+      title: "Pearl sync"
+      text: "38.3%"
+      progressLabel: "About 1h 2m left"
+      progress: 0.383
+  - id: "stats"
+    type: "four-stats"
+    refresh: "10s"
+    endpoint: "dashboard:8080/api/widget/stats"
+    link: ""
+    example:
+      items:
+        - title: "Connections"
+          text: "8"
+          subtext: "peers"
+        - title: "Block height"
+          text: "135.6K"
+          subtext: "blocks"
+        - title: "Blockchain size"
+          text: "10.7"
+          subtext: "GB"
+        - title: "Hashrate"
+          text: "2.62"
+          subtext: "EH/s"
+
 backupIgnore:
   - data/pearld/.pearld/data/*
   - data/pearld/.pearld/logs/*
