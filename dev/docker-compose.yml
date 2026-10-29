@@ -26,7 +26,7 @@ services:
       PEARLD_RPC_PASS: ${RPC_PASS:?}
       PEARLD_RPC_CERT: /pearld/rpc.cert
       PEARLD_DATA_DIR: /pearld/data
-      # Dev only: on a trusted local network. Never enable without a login in front.
+      # Dev only, on a trusted local network. Never enable without a login in front.
       SHOW_RPC_CREDENTIALS: "true"
     volumes:
       - ../data/pearld/.pearld:/pearld:ro
