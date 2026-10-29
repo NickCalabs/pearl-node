@@ -9,8 +9,8 @@ adds what's missing around it:
 | Layer | Folder | What it is | Status |
 |---|---|---|---|
 | Node | [`pearld/`](pearld/) | Pin + checks for the official image `ghcr.io/pearl-research-labs/pearl/pearld` | done |
-| Dashboard | `dashboard/` | Web UI: sync progress, peers, chain size, connection info. Read-only RPC. | next |
-| Packaging | `umbrel/` | umbrelOS app (community store first, then the official store). | planned |
+| Dashboard | [`dashboard/`](dashboard/) | Web UI (`ghcr.io/nickcalabs/pearl-dashboard`): sync progress, peers, latest blocks, connection info. Read-only RPC. | working, design TBD |
+| Packaging | [`pearl-node/`](pearl-node/) + [`umbrel-app-store.yml`](umbrel-app-store.yml) | umbrelOS community app store (`pearl`) with the `pearl-node` app | passes Umbrel's linter; not yet installed on a real Umbrel |
 
 ## Node image
 
@@ -36,10 +36,27 @@ pearld/test/check-image.sh amd64        # the pinned image
 pearld/test/check-image.sh <ref> arm64  # any other image
 ```
 
+## Umbrel
+
+This repo is also an Umbrel community app store. Once it's public, add its URL in umbrelOS under
+App Store → Community App Stores, then install **Pearl Node**.
+
+The app runs pearld plus the dashboard (behind Umbrel's login on port 4108), publishes P2P 44108 and RPC
+44107, and derives its RPC password from Umbrel's per-install seed. Blockchain data is excluded from
+Umbrel backups.
+
+## Development
+
+```sh
+dev/up.sh   # official pearld + dashboard; dashboard on http://localhost:8083
+```
+
 ## CI
 
 - [`check-image.yml`](.github/workflows/check-image.yml): runs `check-image.sh` on the pinned image for
   amd64 + arm64 whenever `pearld/` changes.
+- [`dashboard-image.yml`](.github/workflows/dashboard-image.yml): builds the dashboard for amd64 + arm64
+  (natively, no emulation) and publishes it on `main`.
 - [`upstream-watch.yml`](.github/workflows/upstream-watch.yml): every 6 h, if Pearl published a newer
   release and its image is on GHCR, it opens a PR pinning the new digest and runs the check on it.
 

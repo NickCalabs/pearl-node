@@ -1,0 +1,4 @@
+# Umbrel community app store. Add this repo's URL in umbrelOS:
+# App Store > ... > Community App Stores. App IDs must start with this store ID.
+id: "pearl"
+name: "Pearl"

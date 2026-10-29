@@ -1,0 +1,44 @@
+manifestVersion: 1
+id: pearl-node
+storage:
+  dataRoot: data
+category: crypto
+name: Pearl Node
+version: "1.5.5"
+tagline: Run your own Pearl (PRL) full node
+description: >-
+  Run a full node for Pearl (PRL), the proof-of-useful-work blockchain. Your node downloads and checks every block
+  and its zero-knowledge proof itself, so your wallets and miners can trust it instead of someone else's server.
+
+
+  The first sync downloads the whole chain (about 11 GB, growing about 13 GB a year). It took about 1.5 hours
+  on a 2-core machine with an SSD; slower CPUs and hard drives take longer.
+
+
+  The dashboard shows sync progress, peers, recent blocks and network stats, and gives you the connection
+  details for wallets (RPC) and mining software such as pearl-gateway.
+
+
+  Runs Pearl's official pearld image. Works on CPUs without AVX2 (for example Celeron N3450) and on 64-bit ARM.
+releaseNotes: ""
+
+developer: Pearl Research Labs
+website: https://github.com/pearl-research-labs/pearl
+dependencies: []
+repo: https://github.com/NickCalabs/pearl-node
+support: https://github.com/NickCalabs/pearl-node/issues
+
+port: 4108
+gallery: []
+path: ""
+
+defaultUsername: ""
+defaultPassword: ""
+
+submitter: NickCalabs
+# Replace with the umbrel-apps pull request URL when submitting to the official store.
+submission: https://github.com/NickCalabs/pearl-node
+
+backupIgnore:
+  - data/pearld/.pearld/data/*
+  - data/pearld/.pearld/logs/*

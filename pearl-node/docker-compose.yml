@@ -1,0 +1,51 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: pearl-node_dashboard_1
+      APP_PORT: 8080
+
+  # Pearl's official node image, pinned as in pearld/image. It defaults to root;
+  # HOME=/data makes it keep everything in /data/.pearld as uid 1000.
+  pearld:
+    image: ghcr.io/pearl-research-labs/pearl/pearld:v1.5.5@sha256:9637b57776458f8b524e5f2c6f9010e2b7ba2ccfbecae2f709cbb01e6a2826f9
+    user: "1000:1000"
+    restart: on-failure
+    # Give pearld time to flush its database on shutdown.
+    stop_grace_period: 5m
+    environment:
+      HOME: /data
+    command:
+      - --rpcuser=${APP_PEARL_NODE_RPC_USER}
+      - --rpcpass=${APP_PEARL_NODE_RPC_PASS}
+      - --rpclisten=0.0.0.0:${APP_PEARL_NODE_RPC_PORT}
+      - --listen=0.0.0.0:${APP_PEARL_NODE_P2P_PORT}
+    # P2P for other nodes; RPC (TLS + password) for wallets and miners on the LAN.
+    ports:
+      - "${APP_PEARL_NODE_P2P_PORT}:${APP_PEARL_NODE_P2P_PORT}"
+      - "${APP_PEARL_NODE_RPC_PORT}:${APP_PEARL_NODE_RPC_PORT}"
+    volumes:
+      - ${APP_DATA_DIR}/data/pearld:/data
+
+  dashboard:
+    image: ghcr.io/nickcalabs/pearl-dashboard:sha-c5cd8de@sha256:e532b2eb300ce1b56a3b9003ef905d9e194e5b694c29e587c47d1e62d8ab708c
+    user: "1000:1000"
+    restart: on-failure
+    depends_on:
+      - pearld
+    environment:
+      PEARLD_RPC_URL: https://${APP_PEARL_NODE_HOST}:${APP_PEARL_NODE_RPC_PORT}
+      PEARLD_RPC_USER: ${APP_PEARL_NODE_RPC_USER}
+      PEARLD_RPC_PASS: ${APP_PEARL_NODE_RPC_PASS}
+      PEARLD_RPC_CERT: /pearld-home/.pearld/rpc.cert
+      PEARLD_DATA_DIR: /pearld-home/.pearld/data
+      CONNECT_HOST: ${DEVICE_DOMAIN_NAME}
+      P2P_PORT: ${APP_PEARL_NODE_P2P_PORT}
+      RPC_PORT: ${APP_PEARL_NODE_RPC_PORT}
+      # The dashboard sits behind Umbrel's login (app_proxy), so it may show
+      # the RPC login in its Connect dialog, like Umbrel's Bitcoin Node app.
+      SHOW_RPC_CREDENTIALS: "true"
+    volumes:
+      # Read-only: the node's TLS cert (to pin it) and the chain size on disk.
+      - ${APP_DATA_DIR}/data/pearld:/pearld-home:ro
