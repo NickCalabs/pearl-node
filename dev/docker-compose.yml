@@ -1,0 +1,35 @@
+# Local development stack. Start it with dev/up.sh (it creates dev/.env).
+# Nothing is published to the host except the dashboard on DEV_PORT.
+name: pearl-node-dev
+
+services:
+  pearld:
+    image: ${PEARLD_IMAGE:?run dev/up.sh}
+    user: "1000:1000"
+    environment:
+      HOME: /data
+    volumes:
+      - ../data/pearld:/data
+    command:
+      - --rpcuser=${RPC_USER:?}
+      - --rpcpass=${RPC_PASS:?}
+      - --rpclisten=0.0.0.0:44107
+    restart: unless-stopped
+    stop_grace_period: 1m
+
+  dashboard:
+    build: ../dashboard
+    depends_on: [pearld]
+    environment:
+      PEARLD_RPC_URL: https://pearld:44107
+      PEARLD_RPC_USER: ${RPC_USER:?}
+      PEARLD_RPC_PASS: ${RPC_PASS:?}
+      PEARLD_RPC_CERT: /pearld/rpc.cert
+      PEARLD_DATA_DIR: /pearld/data
+      # Dev only: on a trusted local network. Never enable without a login in front.
+      SHOW_RPC_CREDENTIALS: "true"
+    volumes:
+      - ../data/pearld/.pearld:/pearld:ro
+    ports:
+      - "${DEV_PORT:-8083}:8080"
+    restart: unless-stopped
