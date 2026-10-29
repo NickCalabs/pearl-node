@@ -29,7 +29,7 @@ services:
       - ${APP_DATA_DIR}/data/pearld:/data
 
   dashboard:
-    image: ghcr.io/nickcalabs/pearl-dashboard:sha-c5cd8de@sha256:e532b2eb300ce1b56a3b9003ef905d9e194e5b694c29e587c47d1e62d8ab708c
+    image: ghcr.io/nickcalabs/pearl-dashboard:v0.1.0@sha256:5d4349c3f37b520b1ccc6af6bf6e430dcde7dfd7e20ebf963e66d6612e097922
     user: "1000:1000"
     restart: on-failure
     depends_on:

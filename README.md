@@ -38,7 +38,7 @@ pearld/test/check-image.sh <ref> arm64  # any other image
 
 ## Umbrel
 
-This repo is also an Umbrel community app store. Once it's public, add its URL in umbrelOS under
+This repo is also an Umbrel community app store. Add its URL (https://github.com/NickCalabs/pearl-node) in umbrelOS under
 App Store → Community App Stores, then install **Pearl Node**.
 
 The app runs pearld plus the dashboard (behind Umbrel's login on port 4108), publishes P2P 44108 and RPC
