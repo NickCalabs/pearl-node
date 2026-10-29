@@ -7,3 +7,7 @@ build/
 data/
 vendor/
 dashboard/server/web/
+# Private, local only: project brief / agent instructions (CLAUDE.md -> BRIEF.md)
+BRIEF.md
+CLAUDE.md
+.backup/
