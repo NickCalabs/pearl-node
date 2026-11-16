@@ -99,7 +99,10 @@ type ConnectInfo struct {
 	RPCPort int    `json:"rpcPort"`
 	RPCUser string `json:"rpcUser,omitempty"` // only if SHOW_RPC_CREDENTIALS=true
 	RPCPass string `json:"rpcPass,omitempty"`
-	CertURL string `json:"certUrl,omitempty"`
+	// Read-only login (pearld's limited user), for monitoring tools.
+	RPCLimitUser string `json:"rpcLimitUser,omitempty"`
+	RPCLimitPass string `json:"rpcLimitPass,omitempty"`
+	CertURL      string `json:"certUrl,omitempty"`
 }
 
 type heightSample struct {

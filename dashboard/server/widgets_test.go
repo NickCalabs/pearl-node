@@ -49,7 +49,7 @@ func TestSyncWidget(t *testing.T) {
 }
 
 func TestStatsWidgetHasFourItemsAndNoSecrets(t *testing.T) {
-	s := Status{Reachable: true, Connect: ConnectInfo{RPCUser: "pearl", RPCPass: "secret-pass"}}
+	s := Status{Reachable: true, Connect: ConnectInfo{RPCUser: "pearl", RPCPass: "secret-pass", RPCLimitUser: "ro", RPCLimitPass: "secret-pass-ro"}}
 	b, _ := json.Marshal(statsWidgetFor(s))
 	if strings.Contains(string(b), "secret-pass") {
 		t.Fatal("stats widget leaks the RPC password")

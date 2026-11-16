@@ -19,6 +19,8 @@ services:
     command:
       - --rpcuser=${APP_PEARL_NODE_RPC_USER}
       - --rpcpass=${APP_PEARL_NODE_RPC_PASS}
+      - --rpclimituser=${APP_PEARL_NODE_RPC_LIMIT_USER}
+      - --rpclimitpass=${APP_PEARL_NODE_RPC_LIMIT_PASS}
       - --rpclisten=0.0.0.0:${APP_PEARL_NODE_RPC_PORT}
       - --listen=0.0.0.0:${APP_PEARL_NODE_P2P_PORT}
     # P2P for other nodes; RPC (TLS + password) for wallets and miners on the LAN.
@@ -38,6 +40,9 @@ services:
       PEARLD_RPC_URL: https://${APP_PEARL_NODE_HOST}:${APP_PEARL_NODE_RPC_PORT}
       PEARLD_RPC_USER: ${APP_PEARL_NODE_RPC_USER}
       PEARLD_RPC_PASS: ${APP_PEARL_NODE_RPC_PASS}
+      # Only shown in the Connect dialog; the dashboard itself uses the admin login.
+      PEARLD_RPC_LIMIT_USER: ${APP_PEARL_NODE_RPC_LIMIT_USER}
+      PEARLD_RPC_LIMIT_PASS: ${APP_PEARL_NODE_RPC_LIMIT_PASS}
       PEARLD_RPC_CERT: /pearld-home/.pearld/rpc.cert
       PEARLD_DATA_DIR: /pearld-home/.pearld/data
       CONNECT_HOST: ${DEVICE_DOMAIN_NAME}

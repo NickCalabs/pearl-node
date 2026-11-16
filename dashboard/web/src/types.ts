@@ -56,6 +56,8 @@ export interface Status {
     rpcPort: number;
     rpcUser?: string;
     rpcPass?: string;
+    rpcLimitUser?: string;
+    rpcLimitPass?: string;
     certUrl?: string;
   };
 }

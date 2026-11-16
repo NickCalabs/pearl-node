@@ -5,6 +5,8 @@
 //	PEARLD_RPC_URL        https://pearld:44107
 //	PEARLD_RPC_USER       RPC username (required)
 //	PEARLD_RPC_PASS       RPC password (required)
+//	PEARLD_RPC_LIMIT_USER read-only (pearld --rpclimituser) login to show in the
+//	PEARLD_RPC_LIMIT_PASS UI for monitoring tools (optional; needs SHOW_RPC_CREDENTIALS)
 //	PEARLD_RPC_CERT       path to pearld's rpc.cert (default /pearld/rpc.cert)
 //	PEARLD_DATA_DIR       block data dir, for the chain size (default /pearld/data)
 //	LISTEN                address to serve on (default :8080)
@@ -64,6 +66,7 @@ func main() {
 	}
 	if os.Getenv("SHOW_RPC_CREDENTIALS") == "true" {
 		connect.RPCUser, connect.RPCPass = user, pass
+		connect.RPCLimitUser, connect.RPCLimitPass = os.Getenv("PEARLD_RPC_LIMIT_USER"), os.Getenv("PEARLD_RPC_LIMIT_PASS")
 	}
 
 	p := &poller{

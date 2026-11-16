@@ -320,6 +320,20 @@ function Connect({ s }: { s: Status }) {
               </p>
             )}
           </div>
+          {tab === "rpc" && c.rpcLimitUser && c.rpcLimitPass && (
+            <div className="space-y-3 border-t border-rule pt-5">
+              <div>
+                <h3 className="text-sm text-ink">Read-only login</h3>
+                <p className="mt-1 text-xs leading-relaxed text-ink-3">
+                  For dashboards and monitoring tools. It can read chain data (block height, difficulty, hashrate) but cannot stop or control the node.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <CopyField label="Username" value={c.rpcLimitUser} />
+                <CopyField label="Password" value={c.rpcLimitPass} secret />
+              </div>
+            </div>
+          )}
           {c.certUrl && (
             <a href={c.certUrl} download className="inline-flex text-sm text-accent hover:text-accent-hover">
               Download TLS certificate (rpc.cert) →

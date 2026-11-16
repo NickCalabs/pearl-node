@@ -42,8 +42,15 @@ This repo is also an Umbrel community app store. Add its URL (https://github.com
 App Store → Community App Stores, then install **Pearl Node**.
 
 The app runs pearld plus the dashboard (behind Umbrel's login on port 4108), publishes P2P 44108 and RPC
-44107, and derives its RPC password from Umbrel's per-install seed. Blockchain data is excluded from
+44107, and derives its RPC passwords from Umbrel's per-install seed. Blockchain data is excluded from
 Umbrel backups.
+
+There are two RPC logins, both shown in the dashboard's Connect dialog:
+
+- **Admin** (`pearl`): full control, for wallets and miners.
+- **Read-only** (`pearl-readonly`, pearld's `--rpclimituser`): for monitoring tools. It can call
+  `getinfo`, `getblockcount`, `getbestblockhash`, `getnetworkhashps`, `getdifficulty` and other
+  read calls, but not `stop`, `submitblock`, `sendrawtransaction`, `addnode` or other admin calls.
 
 ## Development
 
