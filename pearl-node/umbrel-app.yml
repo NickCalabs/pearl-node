@@ -4,7 +4,7 @@ storage:
   dataRoot: data
 category: crypto
 name: Pearl Node
-version: "1.5.5-patch.2"
+version: "1.5.5-patch.3"
 tagline: Run your own Pearl (PRL) full node
 # Community store only; the official store hosts icons itself (omit this field there).
 icon: https://raw.githubusercontent.com/NickCalabs/pearl-node/main/assets/icon.svg
@@ -23,8 +23,8 @@ description: >-
 
   Runs Pearl's official pearld image. Works on CPUs without AVX2 (for example Celeron N3450) and on 64-bit ARM.
 releaseNotes: >-
-  Adds two Umbrel home-screen widgets: sync progress, and peers, block height, blockchain size and hashrate.
-  Add them from the widgets menu on your Umbrel home screen. pearld is unchanged (v1.5.5).
+  Adds a read-only RPC login for monitoring tools. It can read block height, difficulty and hashrate,
+  but cannot stop or control the node. Find it under Connect, in the Wallets & apps tab. pearld is unchanged (v1.5.5).
 
 developer: Pearl Research Labs
 website: https://github.com/pearl-research-labs/pearl
